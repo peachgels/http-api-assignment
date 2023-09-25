@@ -6,6 +6,90 @@
   
   <script>
 
+    //handle response when we get it
+    const handleResponse = async (response) => {
+
+      //usable text upon getting a response
+        response.text().then((resText) => {
+
+        //see what type we're working with  
+        const contentType = response.headers.get('Content-Type');
+
+        //grab content from DOM
+        const content = document.querySelector('#content');
+
+        console.log(resText);
+
+        //updates the psuedo h1 with what each status code means
+        switch(response.status) {
+              case 200: //Success
+              content.innerHTML = `<b>Success</b>`;
+                break;
+              case 400: //Bad Request
+                content.innerHTML = `<b>Bad Request</b>`;
+                break;
+              case 401: //unauthorized
+                content.innerHTML = `<b>Unauthorized</b>`;
+                break;
+              case 403: //Forbidden
+                content.innerHTML = `<b>Forbidden</b>`;
+                break;
+              case 404: //Not Found
+                content.innerHTML = `<b>Not Found</b>`;
+                break;
+              case 500: //Internal
+                content.innerHTML = `<b>Internal Server Error</b>`;
+                break;
+              case 501: //Not implemented
+                content.innerHTML = `<b>Not Implemented</b>`;
+                break;
+          };
+
+        //If the server sends back json
+        if(contentType === 'application/json') {
+          //Parse the json back into a javascript object
+          const parsedResponse = JSON.parse(resText);
+          content.innerHTML += `<p>Message: ${parsedResponse.message}</p>`;
+          };
+
+        //if xml
+        if (contentType === 'text/xml') {
+          //Parse the xml
+          const parsedResponse = new window.DOMParser().parseFromString(resText, 'text/xml');
+          content.innerHTML += '<p>'
+          content.innerHTML += 'Message: ' + parsedResponse.querySelector('message').textContent;
+          content.innerHTML += '</p>'
+        };
+      });
+    };   
+
+    //sends the fetch with the url and accepted type
+    const sendFetch = async (url, type) => {
+      const options = {
+        method: 'GET',
+        headers: {'Accept': type},
+      }
+
+      //wait until fetch brings a response, then store it
+      let response = await fetch(url, options);
+
+      //handle the stored response
+      handleResponse(response);
+    };
+
+    const init = () => {
+      //ref to send button
+      const sendBtn = document.querySelector('#send');
+
+      //yucky string that grabs the contents of both dropdowns to populate the fetch request
+      const sendResponse = () => sendFetch(`${document.querySelector('#page').options[document.querySelector('#page').selectedIndex].value}`, 
+      `${document.querySelector('#type').options[document.querySelector('#type').selectedIndex].value}`);
+      
+      //when the button is clicked, send a fetch request w the newly gotten params
+      sendBtn.addEventListener('click', sendResponse);
+    };
+
+    window.onload = init;
   </script>
 </head>
 <body>
